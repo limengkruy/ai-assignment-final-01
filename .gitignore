@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 /modeling/mlruns
 /modeling/dataset
-/modelling/model
+/modeling/model
