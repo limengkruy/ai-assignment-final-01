@@ -1,38 +1,40 @@
-name: Deploy FastAPI to Heroku
+name: Deploy Python App to Heroku
 
 on:
   push:
     branches:
-      - main
+      - main # Trigger the workflow on pushes to the main branch
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       # Step 1: Checkout the code
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      # Step 2: Set up SSH for Heroku
-      - name: Set up SSH for Heroku
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.HEROKU_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
-          ssh -T git@heroku.com
-      # Step 3: Set up Python
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python environment
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
-      # Step 4: Install dependencies
+          python-version: '3.11' # Specify your Python version
+
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      # Step 4: Test the application (optional)
+      - name: Run tests
+        run: |
+          pytest # Replace with your testing framework/command
+
       # Step 5: Deploy to Heroku
       - name: Deploy to Heroku
-        run: |
-          git remote add heroku git@heroku.com:ai-assignment.git
-          git push heroku main
-      # Step 6: Confirm successful deployment
-      - name: Deployment Successful
-        run: echo "FastAPI app deployed to Heroku!"
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: kruylimeng@yahoo.com # Replace with your Heroku email
