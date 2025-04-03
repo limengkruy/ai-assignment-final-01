@@ -1,0 +1,5 @@
+outs:
+- md5: 375c3eee77142dc3600e678d90e1603b
+  size: 74555
+  hash: md5
+  path: ANN_10_Epochs.keras
