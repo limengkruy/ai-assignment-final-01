@@ -26,6 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
+          pip install pip-autoremove
           curl https://cli-assets.heroku.com/install.sh | sh
 
       # Step 4: Test the application (optional)
