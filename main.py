@@ -3,6 +3,8 @@ from pydantic import BaseModel
 import pandas as pd
 import joblib
 import tensorflow as tf
+import dvc.api
+import subprocess
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -14,13 +16,44 @@ physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
     print("GPU is now enabled with Metal API")
-    
+
+# Define model paths (update these based on your folder structure)
+MODEL_PATH_SCIKIT = "modeling/model/training/LogisticRegression.pkl"  # Scikit-learn model
+MODEL_PATH_TENSORFLOW = "modeling/model/training/ANN_10_Epochs.keras"  # TensorFlow model
+
+# Function to run dvc pull to ensure the models are fetched from DVC remote storage
+def pull_models_from_dvc():
+    # Run `dvc pull` to ensure that the models are available locally
+    subprocess.run(["dvc", "pull", "--remote", "origin"], check=True)
+
+# Load models during FastAPI app startup
+def load_models():
+    # Pull the models from DVC storage before loading them
+    pull_models_from_dvc()
+
+    # Load the scikit-learn model using joblib
+    model_sklearn = joblib.load(MODEL_PATH_SCIKIT)
+
+    # Load the TensorFlow model
+    model_tensorflow = tf.keras.models.load_model(MODEL_PATH_TENSORFLOW)
+
+    # Store models in FastAPI app's state for later use
+    app.state.model_sklearn = model_sklearn
+    app.state.model_tensorflow = model_tensorflow
+
+# Register the startup event handler
+app.add_event_handler("startup", load_models)
+
+@app.get("/")
+async def root():
+    return {"message": "Models loaded successfully!"}
+
 # Load your pre-trained Logistic Regression model
-try:
-    logi = joblib.load("modeling/model/training/LogisticRegression.pkl")
-    ann = tf.keras.models.load_model("modeling/model/training/ANN_10_Epochs.keras")
-except Exception as e:
-    raise RuntimeError("Failed to load the logistic model. Check the file path and try again.") from e
+# try:
+#     logi = joblib.load("modeling/model/training/LogisticRegression.pkl")
+#     ann = tf.keras.models.load_model("modeling/model/training/ANN_10_Epochs.keras")
+# except Exception as e:
+#     raise RuntimeError("Failed to load the logistic model. Check the file path and try again.") from e
 
 # Define the data model for incoming JSON requests
 class CustomerData(BaseModel):
@@ -92,6 +125,8 @@ def preprocess_data(data: CustomerData):
 @app.post("/predict/")
 def predict(data: CustomerData):
     try:
+        model_sklearn = app.state.model_sklearn
+        model_tensorflow = app.state.model_tensorflow
         # Preprocess the incoming data
         processed_data = preprocess_data(data)
         # (Optional) Debug prints
@@ -100,11 +135,11 @@ def predict(data: CustomerData):
         print("Processed data:", processed_data.values)
         # Make prediction
         _response = {}
-        prediction = logi.predict(processed_data.values)
+        prediction = model_sklearn.predict(processed_data.values)
         print("Logistic prediction:", prediction)
         result = "Yes" if prediction[0] == 1 else "No"
         _response['prediction-logistic'] = result
-        prediction = (ann.predict(processed_data.values) > 0.5).astype(int)
+        prediction = (model_tensorflow.predict(processed_data.values) > 0.5).astype(int)
         print("ANN prediction:", prediction)
         result = "Yes" if prediction[0][0] == 1 else "No"
         _response['prediction-ann'] = result
@@ -113,39 +148,6 @@ def predict(data: CustomerData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
-@app.post("/predict-logi/")
-def predict_logi(data: CustomerData):
-    try:
-        # Preprocess the incoming data
-        processed_data = preprocess_data(data)
-        # (Optional) Debug prints
-        print("Processed data columns:", processed_data.columns.tolist())
-        print("Processed data shape:", processed_data.shape)
-        print("Processed data:", processed_data.values)
-        # Make prediction
-        prediction = logi.predict(processed_data.values)
-        result = "Yes" if prediction[0] == 1 else "No"
-        return {"prediction": result}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
-    
-@app.post("/predict-ann/")
-def predict_ann(data: CustomerData):
-    try:
-        # Preprocess the incoming data
-        processed_data = preprocess_data(data)
-        # (Optional) Debug prints
-        print("Processed data columns:", processed_data.columns.tolist())
-        print("Processed data shape:", processed_data.shape)
-        print("Processed data:", processed_data.values)
-        # Make prediction
-        prediction = (ann.predict(processed_data.values) > 0.5).astype(int)
-        result = "Yes" if prediction[0] == 1 else "No"
-        return {"prediction": result}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
 if __name__ == "__main__":
     import uvicorn
