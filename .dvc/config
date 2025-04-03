@@ -3,5 +3,3 @@
 ['remote "main"']
     url = s3://dvc
     endpointurl = https://dagshub.com/limengkruy/ai-assignment-final-data-01.s3
-    access_key_id = b1a657130ad5a3da233386baf46baa35bc361f25
-    secret_access_key = b1a657130ad5a3da233386baf46baa35bc361f25
