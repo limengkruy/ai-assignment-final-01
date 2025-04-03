@@ -3,7 +3,7 @@ name: Deploy FastAPI to Heroku
 on:
   push:
     branches:
-      - main  # Trigger on push to the `main` branch
+      - main
 
 jobs:
   deploy:
@@ -14,18 +14,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up Heroku authentication using API key
-      - name: Authenticate with Heroku
+      # Step 2: Set up SSH for Heroku
+      - name: Set up SSH for Heroku
         run: |
-          echo "machine api.heroku.com" > ~/.netrc
-          echo "login ${{ secrets.HEROKU_EMAIL }}" >> ~/.netrc
-          echo "password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HEROKU_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
 
       # Step 3: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.11'
+          python-version: '3.8'
 
       # Step 4: Install dependencies
       - name: Install dependencies
@@ -35,9 +36,8 @@ jobs:
       # Step 5: Deploy to Heroku
       - name: Deploy to Heroku
         run: |
-          git remote add heroku https://git.heroku.com/ai-assignment.git
-          git push heroku main  
-      # Push the app to Heroku
+          git remote add heroku git@heroku.com:ai-assignment.git
+          git push heroku main
 
       # Step 6: Confirm successful deployment
       - name: Deployment Successful
