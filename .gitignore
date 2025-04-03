@@ -170,3 +170,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 /modeling/mlruns
+/modeling/dataset
+/modelling/model
