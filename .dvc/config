@@ -1,0 +1,4 @@
+[core]
+    remote = origin
+['remote "origin"']
+    url = https://dagshub.com/limengkruy/ai-assignment-final-01-data.dvc
