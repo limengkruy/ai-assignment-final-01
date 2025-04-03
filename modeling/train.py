@@ -36,7 +36,7 @@ mlflow.set_experiment("Customer Churn Prediction")
 # ==============================
 
 # Load Dataset
-df = pd.read_excel('dataset/dataset_v01.xlsx')
+df = pd.read_csv('dataset/dataset_v01.csv')
 
 # Drop customerID as it's not useful
 df = df.drop(columns=['customerID'], errors='ignore')

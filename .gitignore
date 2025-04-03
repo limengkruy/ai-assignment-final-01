@@ -172,3 +172,5 @@ cython_debug/
 /modeling/mlruns
 /modeling/dataset/dataset_v01.csv
 /modeling/model/*
+!modeling/model/training/LogisticRegression.pkl.dvc
+!modeling/model/training/ANN_10_Epochs.keras.dvc
