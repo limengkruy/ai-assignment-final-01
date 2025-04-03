@@ -4,16 +4,13 @@ on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       # Step 1: Checkout the code
       - name: Checkout repository
         uses: actions/checkout@v2
-
       # Step 2: Set up SSH for Heroku
       - name: Set up SSH for Heroku
         run: |
@@ -22,24 +19,20 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
           ssh -T git@heroku.com
-
       # Step 3: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-
       # Step 4: Install dependencies
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-
       # Step 5: Deploy to Heroku
       - name: Deploy to Heroku
         run: |
           git remote add heroku git@heroku.com:ai-assignment.git
           git push heroku main
-
       # Step 6: Confirm successful deployment
       - name: Deployment Successful
         run: echo "FastAPI app deployed to Heroku!"
