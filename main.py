@@ -12,10 +12,10 @@ app = FastAPI()
 # Disable GPU (Optional)
 tf.config.set_visible_devices([], 'GPU')  # Disable default GPU setting
 
-physical_devices = tf.config.list_physical_devices('GPU')
-if physical_devices:
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
-    print("GPU is now enabled with Metal API")
+# physical_devices = tf.config.list_physical_devices('GPU')
+# if physical_devices:
+#     tf.config.experimental.set_memory_growth(physical_devices[0], True)
+#     print("GPU is now enabled with Metal API")
 
 # Define model paths (update these based on your folder structure)
 MODEL_PATH_SCIKIT = "modeling/model/training/LogisticRegression.pkl"  # Scikit-learn model
