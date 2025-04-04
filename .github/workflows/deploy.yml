@@ -1,4 +1,4 @@
-name: Deploy Python App to Heroku
+name: Deploy Python App to Vultr
 
 on:
   push:
@@ -18,26 +18,38 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11.5' # Specify your Python version
+          python-version: '3.11' # Specify your Python version
 
       # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
-          pip install pip-autoremove
-          curl https://cli-assets.heroku.com/install.sh | sh
 
       # Step 4: Test the application (optional)
       - name: Run tests
         run: |
           pytest # Replace with your testing framework/command
 
-      # Step 5: Deploy to Heroku
-      - name: Deploy to Heroku
-        uses: akhileshns/heroku-deploy@v3.12.12
+      # Step 5: Copy files to the Vultr Droplet
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
         with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-          heroku_email: kruylimeng@yahoo.com # Replace with your Heroku email
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./*" # Copy all files in the repository
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      # Step 6: Restart the application on the server
+      - name: Restart application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            source venv/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart myapp
