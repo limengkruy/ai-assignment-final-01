@@ -8,3 +8,4 @@ tensorflow-cpu
 mlflow
 httpx
 dvc
+pytest
