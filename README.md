@@ -1,5 +1,12 @@
 # Customer Churn Prediction with AI 🚀
 
+## Member
+  ### 🧑‍💻 Limeng KRUY
+  ### 🧑‍💻 Oudom CHHOUN
+
+##
+
+
 ## Overview
 Welcome to the **Customer Churn Prediction Project**! 🎯 This AI-powered application uses the **Telco customer dataset** to predict whether a customer is likely to churn. We’ve built a robust machine learning model using **scikit-learn** and deployed it as a web API using **FastAPI**. Whether you’re an aspiring data scientist, a business analyst, or someone interested in customer retention strategies, this project is for you! 🔍
 
@@ -19,6 +26,7 @@ This project uses a collection of powerful tools to make the magic happen:
 - **Uvicorn**: The lightning-fast ASGI server for running FastAPI ⚡
 - **Pandas**: For all things data manipulation 🧑‍💻
 - **MLflow**: For track experiments, log models, and manage model versions. 📊
+- **DagsHub and DVC**: For track change on dataset and model. 🖥️
 
 ---
 
@@ -111,5 +119,82 @@ uvicorn main:app --reload
 ### 8. Result FastAPI
 ![alt text](image/03-result-fast-api.gif)
 
-### 9. Presentation
+
+### 💾 9. Track Data Changed and Model with DVC
+```bash
+dvc init
+dvc add modeling/dataset/dataset_v01.csv
+dvc add modeling/model/training/ANN_10_Epochs.keras
+dvc add modeling/model/training/LogisticRegression.pkl
+dvc remote add origin https://dagshub.com/limengkruy/ai-assignment-final-01.dvc
+dvc remote modify origin --local auth basic 
+dvc remote modify origin --local user {username} 
+dvc remote modify origin --local password {token}
+dvc push
+```
+- Next Step is to commit and push to GitHub
+
+![alt text](image/05-dagshub-dvc.png)
+
+### ⚡ 10. Add GitHub WorkFlows
+- `.github/workflows/test.yml`
+- `.github/workflows/deploy.yml`
+
+### ⚡ 11. Create SSH Key
+- `ssh-keygen -t rsa -b 4096 -C "yourname@email.com"`
+- `cat ~/.ssh/id_rsa.pub` #Public Key
+- `cat ~/.ssh/id_rsa` #Private Key
+
+### ⚡ 12. Create Secret Key for Repo
+- Go to your GitHub repository.
+- Navigate to Settings → Secrets → New repository secret.
+- Add each secret mentioned below.
+
+    `SERVER_IP` : Vultr Public IP
+
+    `SERVER_USER` : root or non-root User
+
+    `SSH_PRIVATE_KEY` : Your Private Key
+
+    `DEPLOY_PATH` : Your app path on server [`/opt/python_project`]
+
+### ⚡ 13. Server Setup
+- `ssh -i ~/.ssh/id_rsa root@your-server-ip`  #SSH to Server
+- `cd /opt`  #Change director to /opt
+- `mkdir python_project`  #Create folder `python_project`
+- `python -m venv /opt/python_project/venv`  #Create environment for python
+- `source /opt/python_project/venv/bin/activate`  #Activate evironment
+- `pip install fastapi uvicorn gunicorn`  #Install library
+- `nano /etc/systemd/system/myapp.service`  #Create systemd
+
+````bash
+[Unit]
+Description=Gunicorn instance to serve myapp
+After=network.target
+
+[Service]
+User=<your-username>
+Group=<your-group>
+WorkingDirectory=/opt/python_project
+ExecStart=/opt/python_project/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000
+Restart=always
+Environment="PATH=/opt/python_project/venv/bin"
+
+[Install]
+WantedBy=multi-user.target
+````
+
+Reload Systemd and Test before make it works
+- `systemctl daemon-reload`
+- `systemctl start myapp`
+- `systemctl enable myapp`
+- `systemctl status myapp`
+
+### ⚡ 14. Let's make change on `main` branch on GitHub and see Action Tab
+![alt text](image/06-result-actions-github.png)
+
+### ⚡ 15. Let's see Result
+![alt text](image/07-result-fast-api-deployed.png)
+
+### 9. Presentation on Model Evaluation
 [See Presentation on Google Slides](https://docs.google.com/presentation/d/1sUeIx7PEJGxAEzLBQ_ddtX754laaDt8t2l2EKBu9cC8/edit?usp=sharing)
